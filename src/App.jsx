@@ -62,7 +62,7 @@ function getKeyboardStatuses(guesses, answer) {
 function Cell({ value, status, isSubmitted }) {
   return (
     <div
-      className={`flex font-rubik text-2xl border-2 border-gray-400 w-14 h-14 sm:w-20 sm:h-20 items-center justify-center font-bold
+      className={`flex font-rubik text-2xl border-2 border-gray-200 w-[12vw] h-[12vw] max-w-[62px] max-h-[62px] items-center justify-center font-bold
         ${STATUS_COLORS[status] ?? "bg-white"}
         ${isSubmitted ? "text-white border-transparent" : "text-black"}
         `}
@@ -76,10 +76,10 @@ function Button({ value, status, handleKeyClick }) {
   return (
     <button
       className={`
-      font-bold cursor-pointer rounded text-sm sm:h-[50px] h-16
-      ${STATUS_COLORS[status] ?? "bg-gray-200 hover:bg-gray-300"}
+      font-bold cursor-pointer rounded text-sm h-16
+      ${STATUS_COLORS[status] ?? "bg-gray-300 hover:bg-gray-400"}
       ${status ? "text-white" : "text-black"}
-      ${value == "Enter" || value == "⌫" ? "w-16" : "w-11"}
+      ${value == "Enter" || value == "⌫" ? "w-12 sm:w-16" : "w-9 sm:w-11"}
     `}
       onClick={() => handleKeyClick(value)}
       onKeyDown={(e) => e.preventDefault()}
@@ -211,8 +211,8 @@ function Game() {
   }
 
   return (
-    <>
-      <header className="w-full border-b border-gray-300 flex items-center justify-center py-3 mb-6">
+    <div className="flex flex-col min-h-screen items-center">
+      <header className="w-full border-b border-gray-300 flex items-center justify-center py-3 mb-6 relative">
         <h1 className="text-4xl font-bold font-rubik text-gray-800 tracking-wider">
           WORDLE
         </h1>
@@ -223,21 +223,23 @@ function Game() {
           Challenge
         </button>
       </header>
-      <div className="flex flex-col items-center w-full gap-1 pt-4">
-        {Array.from({ length: MAX_GUESSES }, (_, i) => (
-          <Row
-            key={i}
-            guess={
-              i < guesses.length
-                ? guesses[i]
-                : i === guesses.length
-                  ? currentGuess
-                  : ""
-            }
-            isSubmitted={i < guesses.length}
-            answer={answer}
-          />
-        ))}
+      <div className="flex flex-col items-center w-full px-2 py-6 gap-8">
+        <div className="flex flex-col gap-[6px]">
+          {Array.from({ length: MAX_GUESSES }, (_, i) => (
+            <Row
+              key={i}
+              guess={
+                i < guesses.length
+                  ? guesses[i]
+                  : i === guesses.length
+                    ? currentGuess
+                    : ""
+              }
+              isSubmitted={i < guesses.length}
+              answer={answer}
+            />
+          ))}
+        </div>
 
         <Toast message={toast} />
         {(guesses.includes(answer) || guesses.length === MAX_GUESSES) && (
@@ -249,23 +251,19 @@ function Game() {
           </button>
         )}
 
-        <div className="flex flex-col w-full px-2 gap-4 mt-6 mb-6">
+        <div className="flex flex-col w-full px-2 gap-1 mt-6 mb-6">
           <Keyboard
             statuses={keyboardStatuses}
             handleKeyClick={handleKeyClick}
           />
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
 function App() {
-  return (
-    <div className="flex flex-col min-h-screen">
-      <Game />
-    </div>
-  );
+  return <Game />;
 }
 
 export default App;
