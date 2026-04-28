@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { WORDS } from "./words.js";
 
-const WORD_LENGTH = 5;
 const MAX_GUESSES = 6;
 const PRIORITY = { correct: 3, present: 2, absent: 1 };
 const STATUS_COLORS = {
@@ -63,7 +62,7 @@ function getKeyboardStatuses(guesses, answer) {
 function Cell({ value, status, isSubmitted }) {
   return (
     <div
-      className={`flex font-ultra text-2xl border-2 border-gray-400 w-14 h-14 items-center justify-center font-bold
+      className={`flex font-rubik text-2xl border-2 border-gray-400 w-14 h-14 sm:w-20 sm:h-20 items-center justify-center font-bold
         ${STATUS_COLORS[status] ?? "bg-white"}
         ${isSubmitted ? "text-white border-transparent" : "text-black"}
         `}
@@ -77,7 +76,7 @@ function Button({ value, status, handleKeyClick }) {
   return (
     <button
       className={`
-      h-14 font-bold cursor-pointer rounded text-sm
+      font-bold cursor-pointer rounded text-sm sm:h-[50px] h-16
       ${STATUS_COLORS[status] ?? "bg-gray-200 hover:bg-gray-300"}
       ${status ? "text-white" : "text-black"}
       ${value == "Enter" || value == "⌫" ? "w-16" : "w-11"}
@@ -94,7 +93,7 @@ function Row({ guess, answer, isSubmitted }) {
   const guessStatuses = getGuessStatuses(guess, answer);
   return (
     <div className="flex gap-2">
-      {Array.from({ length: WORD_LENGTH }, (_, i) => (
+      {Array.from({ length: answer.length }, (_, i) => (
         <Cell
           key={i}
           value={guess.at(i)}
@@ -117,6 +116,7 @@ function Keyboard({ statuses, handleKeyClick }) {
     <div key={rowIndex} className="flex gap-1 justify-center">
       {row.map((letter) => (
         <Button
+          key={letter}
           value={letter}
           status={statuses[letter]}
           handleKeyClick={handleKeyClick}
@@ -136,17 +136,27 @@ function Toast({ message }) {
 }
 
 function Game() {
+  const params = new URLSearchParams(window.location.search);
+  const encoded = params.get("challenge");
   const [currentGuess, setCurrentGuess] = useState("");
   const [guesses, setGuesses] = useState([]);
-  const [answer, setAnswer] = useState(() =>
-    WORDS[Math.floor(Math.random() * WORDS.length)].toUpperCase(),
-  );
+  const [answer, setAnswer] = useState(() => {
+    if (encoded) return atob(encoded).toUpperCase();
+    return WORDS[Math.floor(Math.random() * WORDS.length)].toUpperCase();
+  });
   const [toast, setToast] = useState("");
   const keyboardStatuses = getKeyboardStatuses(guesses, answer);
 
   function showToast(message) {
     setToast(message);
     setTimeout(() => setToast(""), 2000);
+  }
+
+  function handleShare() {
+    const encoded = btoa(answer);
+    const url = `${window.location.origin}?challenge=${encoded}`;
+    navigator.clipboard.writeText(url);
+    showToast("Challenge link copied!");
   }
 
   function handleReset() {
@@ -161,8 +171,8 @@ function Game() {
     if (guesses.at(-1) === answer) return;
 
     if (key === "Enter") {
-      if (currentGuess.length === WORD_LENGTH) {
-        if (!WORDS.includes(currentGuess.toLowerCase())) {
+      if (currentGuess.length === answer.length) {
+        if (!encoded && !WORDS.includes(currentGuess.toLowerCase())) {
           showToast("Not a valid word");
           return;
         }
@@ -179,7 +189,7 @@ function Game() {
     } else if (key === "Backspace" || key === "⌫") {
       setCurrentGuess((prev) => prev.slice(0, -1));
     } else {
-      if (currentGuess.length < WORD_LENGTH) {
+      if (currentGuess.length < answer.length) {
         setCurrentGuess((prev) => prev.concat(key));
       }
     }
@@ -201,47 +211,58 @@ function Game() {
   }
 
   return (
-    <div className="flex flex-col items-center w-full gap-1 pt-4">
-      {Array.from({ length: MAX_GUESSES }, (_, i) => (
-        <Row
-          key={i}
-          guess={
-            i < guesses.length
-              ? guesses[i]
-              : i === guesses.length
-                ? currentGuess
-                : ""
-          }
-          isSubmitted={i < guesses.length}
-          answer={answer}
-        />
-      ))}
-
-      <Toast message={toast} />
-      {(guesses.includes(answer) || guesses.length === MAX_GUESSES) && (
+    <>
+      <header className="w-full border-b border-gray-300 flex items-center justify-center py-3 mb-6">
+        <h1 className="text-4xl font-bold font-rubik text-gray-800 tracking-wider">
+          WORDLE
+        </h1>
         <button
-          onClick={handleReset}
-          className="mt-2 px-6 py-2 bg-green-600 text-white font-bold rounded hover:bg-green-700"
+          onClick={handleShare}
+          className="absolute right-4 px-2 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 text-xs cursor-pointer"
         >
-          Play Again
+          Challenge
         </button>
-      )}
+      </header>
+      <div className="flex flex-col items-center w-full gap-1 pt-4">
+        {Array.from({ length: MAX_GUESSES }, (_, i) => (
+          <Row
+            key={i}
+            guess={
+              i < guesses.length
+                ? guesses[i]
+                : i === guesses.length
+                  ? currentGuess
+                  : ""
+            }
+            isSubmitted={i < guesses.length}
+            answer={answer}
+          />
+        ))}
 
-      <div className="flex flex-col gap-4 mt-6 mb-6">
-        <Keyboard statuses={keyboardStatuses} handleKeyClick={handleKeyClick} />
+        <Toast message={toast} />
+        {(guesses.includes(answer) || guesses.length === MAX_GUESSES) && (
+          <button
+            onClick={handleReset}
+            className="mt-2 px-6 py-2 bg-green-600 text-white font-bold rounded hover:bg-green-700"
+          >
+            Play Again
+          </button>
+        )}
+
+        <div className="flex flex-col w-full px-2 gap-4 mt-6 mb-6">
+          <Keyboard
+            statuses={keyboardStatuses}
+            handleKeyClick={handleKeyClick}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
 function App() {
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="w-full border-b border-gray-300 flex items-center justify-center py-3 mb-6">
-        <h1 className="text-4xl font-bold font-ultra text-gray-800 tracking-wider">
-          WORDLE
-        </h1>
-      </header>
       <Game />
     </div>
   );
