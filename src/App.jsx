@@ -63,9 +63,9 @@ function getKeyboardStatuses(guesses, answer) {
 function Cell({ value, status, isSubmitted }) {
   return (
     <div
-      className={`flex font-ultra text-4xl border border-gray-600 w-20 h-20 items-center justify-center font-bold
-        ${STATUS_COLORS[status] ?? ""}
-        ${isSubmitted ? "text-white" : "text-black"}
+      className={`flex font-ultra text-2xl border-2 border-gray-400 w-14 h-14 items-center justify-center font-bold
+        ${STATUS_COLORS[status] ?? "bg-white"}
+        ${isSubmitted ? "text-white border-transparent" : "text-black"}
         `}
     >
       {value}
@@ -77,9 +77,10 @@ function Button({ value, status, handleKeyClick }) {
   return (
     <button
       className={`
-    w-10 h-10 font-bold cursor-pointer
-      ${STATUS_COLORS[status] ?? "bg-gray-50 hover:bg-gray-100"}
+      h-14 font-bold cursor-pointer rounded text-sm
+      ${STATUS_COLORS[status] ?? "bg-gray-200 hover:bg-gray-300"}
       ${status ? "text-white" : "text-black"}
+      ${value == "Enter" || value == "⌫" ? "w-16" : "w-11"}
     `}
       onClick={() => handleKeyClick(value)}
       onKeyDown={(e) => e.preventDefault()}
@@ -109,11 +110,11 @@ function Keyboard({ statuses, handleKeyClick }) {
   const ROWS = [
     ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
     ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
-    ["Z", "X", "C", "V", "B", "N", "M"],
+    ["Enter", "Z", "X", "C", "V", "B", "N", "M", "⌫"],
   ];
 
   return ROWS.map((row, rowIndex) => (
-    <div key={rowIndex} className="flex gap-1">
+    <div key={rowIndex} className="flex gap-1 justify-center">
       {row.map((letter) => (
         <Button
           value={letter}
@@ -125,13 +126,28 @@ function Keyboard({ statuses, handleKeyClick }) {
   ));
 }
 
+function Toast({ message }) {
+  if (!message) return null;
+  return (
+    <div className="fixed top-10 left-1/2 -translate-x-1/2 bg-black text-white px-4 py-2 rounded-lg">
+      {message}
+    </div>
+  );
+}
+
 function Game() {
   const [currentGuess, setCurrentGuess] = useState("");
   const [guesses, setGuesses] = useState([]);
   const [answer, setAnswer] = useState(() =>
     WORDS[Math.floor(Math.random() * WORDS.length)].toUpperCase(),
   );
+  const [toast, setToast] = useState("");
   const keyboardStatuses = getKeyboardStatuses(guesses, answer);
+
+  function showToast(message) {
+    setToast(message);
+    setTimeout(() => setToast(""), 2000);
+  }
 
   function handleReset() {
     setCurrentGuess("");
@@ -139,40 +155,53 @@ function Game() {
     setAnswer(WORDS[Math.floor(Math.random() * WORDS.length)].toUpperCase());
   }
 
-  function handleKeyClick(letter) {
+  function handleInput(key) {
+    if (key >= "0" && key <= "9") return;
     if (guesses.length >= MAX_GUESSES) return;
     if (guesses.at(-1) === answer) return;
-    if (currentGuess.length < WORD_LENGTH)
-      setCurrentGuess(currentGuess.concat(letter));
+
+    if (key === "Enter") {
+      if (currentGuess.length === WORD_LENGTH) {
+        if (!WORDS.includes(currentGuess.toLowerCase())) {
+          showToast("Not a valid word");
+          return;
+        }
+        const newGuesses = guesses.concat(currentGuess);
+        setGuesses(newGuesses);
+        setCurrentGuess("");
+
+        if (newGuesses.includes(answer)) {
+          showToast(`You won in ${newGuesses.length} guesses!`);
+        } else if (newGuesses.length === MAX_GUESSES) {
+          showToast(`You lost! Word was ${answer}`);
+        }
+      }
+    } else if (key === "Backspace" || key === "⌫") {
+      setCurrentGuess((prev) => prev.slice(0, -1));
+    } else {
+      if (currentGuess.length < WORD_LENGTH) {
+        setCurrentGuess((prev) => prev.concat(key));
+      }
+    }
   }
 
   useEffect(() => {
     function handleKey(e) {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
-
-      const code = e.code;
-      if (guesses.length >= MAX_GUESSES) return;
-      if (guesses.at(-1) === answer) return;
-
-      if (code.startsWith("Key")) {
-        if (currentGuess.length < WORD_LENGTH)
-          setCurrentGuess(currentGuess.concat(code.at(-1)));
-      } else if (code === "Backspace") {
-        setCurrentGuess(currentGuess.slice(0, -1));
-      } else if (code === "Enter") {
-        if (currentGuess.length == WORD_LENGTH) {
-          setGuesses(guesses.concat(currentGuess));
-          setCurrentGuess("");
-        }
-      }
+      const key = e.code.startsWith("Key") ? e.code.at(-1) : e.key;
+      handleInput(key);
     }
 
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [currentGuess, guesses]);
 
+  function handleKeyClick(key) {
+    handleInput(key);
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen w-full gap-2">
+    <div className="flex flex-col items-center w-full gap-1 pt-4">
       {Array.from({ length: MAX_GUESSES }, (_, i) => (
         <Row
           key={i}
@@ -188,19 +217,34 @@ function Game() {
         />
       ))}
 
-      {guesses.includes(answer) && <p>You won in {guesses.length} guesses!</p>}
-      {guesses.length === MAX_GUESSES && !guesses.includes(answer) && (
-        <p>You lost! Word was {answer}</p>
+      <Toast message={toast} />
+      {(guesses.includes(answer) || guesses.length === MAX_GUESSES) && (
+        <button
+          onClick={handleReset}
+          className="mt-2 px-6 py-2 bg-green-600 text-white font-bold rounded hover:bg-green-700"
+        >
+          Play Again
+        </button>
       )}
-      <button onClick={handleReset}>Play Again</button>
 
-      <Keyboard statuses={keyboardStatuses} handleKeyClick={handleKeyClick} />
+      <div className="flex flex-col gap-4 mt-6 mb-6">
+        <Keyboard statuses={keyboardStatuses} handleKeyClick={handleKeyClick} />
+      </div>
     </div>
   );
 }
 
 function App() {
-  return <Game />;
+  return (
+    <div className="flex flex-col min-h-screen">
+      <header className="w-full border-b border-gray-300 flex items-center justify-center py-3 mb-6">
+        <h1 className="text-4xl font-bold font-ultra text-gray-800 tracking-wider">
+          WORDLE
+        </h1>
+      </header>
+      <Game />
+    </div>
+  );
 }
 
 export default App;
