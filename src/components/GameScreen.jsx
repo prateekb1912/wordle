@@ -134,7 +134,7 @@ function Toast({ message }) {
   );
 }
 
-function GameScreen({ word, roomCode }) {
+function GameScreen({ word, roomCode, isMultiplayer }) {
   const params = new URLSearchParams(window.location.search);
   const encoded = params.get("challenge");
   const [currentGuess, setCurrentGuess] = useState("");
@@ -234,12 +234,14 @@ function GameScreen({ word, roomCode }) {
         <h1 className="text-4xl font-bold font-rubik text-gray-800 tracking-wider">
           WORDLE
         </h1>
-        <button
-          onClick={handleShare}
-          className="absolute right-4 px-2 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 text-xs cursor-pointer"
-        >
-          Challenge
-        </button>
+        {!isMultiplayer && (
+          <button
+            onClick={handleShare}
+            className="absolute right-4 px-2 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 text-xs cursor-pointer"
+          >
+            Challenge
+          </button>
+        )}
       </header>
       <div className="flex flex-col items-center w-full px-2 py-6 gap-8">
         <div className="flex flex-col gap-[6px]">
@@ -260,14 +262,15 @@ function GameScreen({ word, roomCode }) {
         </div>
 
         <Toast message={toast} />
-        {(guesses.includes(answer) || guesses.length === MAX_GUESSES) && (
-          <button
-            onClick={handleReset}
-            className="mt-2 px-6 py-2 bg-green-600 text-white font-bold rounded hover:bg-green-700"
-          >
-            Play Again
-          </button>
-        )}
+        {!isMultiplayer &&
+          (guesses.includes(answer) || guesses.length === MAX_GUESSES) && (
+            <button
+              onClick={handleReset}
+              className="mt-2 px-6 py-2 bg-green-600 text-white font-bold rounded hover:bg-green-700"
+            >
+              Play Again
+            </button>
+          )}
 
         <div className="flex flex-col w-full px-2 gap-1 mt-6 mb-6">
           <Keyboard
@@ -276,15 +279,17 @@ function GameScreen({ word, roomCode }) {
           />
         </div>
 
-        <div>
-          <ul>
-            {leaderboardState.map(({ name, score }) => (
-              <li key={name}>
-                {name} {score}
-              </li>
-            ))}
-          </ul>
-        </div>
+        {isMultiplayer && (
+          <div>
+            <ul>
+              {leaderboardState.map(({ name, score }) => (
+                <li key={name}>
+                  {name} {score}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );

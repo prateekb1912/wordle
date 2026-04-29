@@ -43,7 +43,13 @@ function App() {
   }, []);
 
   if (screen == "game")
-    return <GameScreen word={roundWord} roomCode={roomState.code} />;
+    return (
+      <GameScreen
+        word={roundWord}
+        roomCode={roomState.code}
+        isMultiplayer={true}
+      />
+    );
   else if (screen == "home") return <HomeScreen />;
   else if (screen == "lobby")
     return <LobbyScreen room={roomState} socketId={socket.id} />;
