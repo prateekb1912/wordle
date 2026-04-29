@@ -9,7 +9,10 @@ const MAX_ROUNDS = 1;
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "*" },
+  cors: {
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    methods: ["GET", "POST"],
+  },
 });
 const rooms = {};
 
