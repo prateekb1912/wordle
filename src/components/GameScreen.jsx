@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { WORDS } from "../words";
+import socket from "../socket";
 
 const MAX_GUESSES = 6;
 const PRIORITY = { correct: 3, present: 2, absent: 1 };
@@ -133,16 +134,17 @@ function Toast({ message }) {
   );
 }
 
-function GameScreen() {
+function GameScreen({ word, roomCode }) {
   const params = new URLSearchParams(window.location.search);
   const encoded = params.get("challenge");
   const [currentGuess, setCurrentGuess] = useState("");
   const [guesses, setGuesses] = useState([]);
   const [answer, setAnswer] = useState(() => {
     if (encoded) return atob(encoded).toUpperCase();
-    return WORDS[Math.floor(Math.random() * WORDS.length)].toUpperCase();
+    return word;
   });
   const [toast, setToast] = useState("");
+  const [leaderboardState, setLeaderboardState] = useState([]);
   const keyboardStatuses = getKeyboardStatuses(guesses, answer);
 
   function showToast(message) {
@@ -180,8 +182,18 @@ function GameScreen() {
 
         if (newGuesses.includes(answer)) {
           showToast(`You won in ${newGuesses.length} guesses!`);
+          socket.emit("submitResult", {
+            roomCode,
+            guessCount: newGuesses.length,
+            won: true,
+          });
         } else if (newGuesses.length === MAX_GUESSES) {
           showToast(`You lost! Word was ${answer}`);
+          socket.emit("submitResult", {
+            roomCode,
+            guessCount: newGuesses.length,
+            won: false,
+          });
         }
       }
     } else if (key === "Backspace" || key === "⌫") {
@@ -192,6 +204,14 @@ function GameScreen() {
       }
     }
   }
+
+  useEffect(() => {
+    socket.on("leaderboardUpdated", (leaderboard) => {
+      setLeaderboardState(leaderboard);
+    });
+
+    return () => socket.off("leaderboardUpdated");
+  }, []);
 
   useEffect(() => {
     function handleKey(e) {
@@ -254,6 +274,16 @@ function GameScreen() {
             statuses={keyboardStatuses}
             handleKeyClick={handleKeyClick}
           />
+        </div>
+
+        <div>
+          <ul>
+            {leaderboardState.map(({ name, score }) => (
+              <li key={name}>
+                {name} {score}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>

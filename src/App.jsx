@@ -9,6 +9,7 @@ import LobbyScreen from "./components/LobbyScreen.jsx";
 function App() {
   const [screen, setScreen] = useState("home");
   const [roomState, setRoomState] = useState(null);
+  const [roundWord, setRoundWord] = useState(null);
 
   useEffect(() => {
     socket.on("connect", () => console.log("connected:", socket.id));
@@ -16,14 +17,20 @@ function App() {
       setRoomState(room);
       setScreen("lobby");
     });
+    socket.on("roundStarted", ({ word, round }) => {
+      setScreen("game");
+      setRoundWord(word);
+    });
 
     return () => {
+      socket.off("roundStarted");
       socket.off("roomUpdated");
       socket.off("connect");
     };
   }, []);
 
-  if (screen == "game") return <GameScreen />;
+  if (screen == "game")
+    return <GameScreen word={roundWord} roomCode={roomState.code} />;
   else if (screen == "home") return <HomeScreen />;
   else if (screen == "lobby")
     return <LobbyScreen room={roomState} socketId={socket.id} />;
