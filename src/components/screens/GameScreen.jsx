@@ -253,7 +253,7 @@ function GameScreen({ word, roomCode, isMultiplayer, leaderboard }) {
       </div>
       {isMultiplayer && (
         <div className="w-full max-w-sm lg:w-44 lg:pt-2 lg:order-last">
-          <Leaderboard leaderboard={leaderboard} />
+          <Leaderboard leaderboard={leaderboard} variant="sidebar" />
         </div>
       )}
     </div>
