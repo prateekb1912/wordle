@@ -2,6 +2,8 @@ import "./App.css";
 import { useState } from "react";
 import { useEffect } from "react";
 import { WORDS } from "./words.js";
+import socket from "./socket";
+import HomeScreen from "./components/HomeScreen.jsx";
 
 const MAX_GUESSES = 6;
 const PRIORITY = { correct: 3, present: 2, absent: 1 };
@@ -263,7 +265,27 @@ function Game() {
 }
 
 function App() {
-  return <Game />;
+  const [screen, setScreen] = useState("home");
+  const [roomState, setRoomState] = useState(null);
+  // const [playerName, setPlayerName] = useState("");
+
+  useEffect(() => {
+    socket.on("connect", () => console.log("connected:", socket.id));
+    socket.on("roomUpdated", (room) => {
+      setRoomState(room);
+      setScreen("lobby");
+    });
+
+    return () => {
+      socket.off("roomUpdated");
+      socket.off("connect");
+    };
+  }, []);
+
+  if (screen == "game") return <Game />;
+  else if (screen == "home") return <HomeScreen />;
+  else if (screen == "lobby")
+    return <LobbyScreen room={roomState} socketId={socket.id} />;
 }
 
 export default App;
