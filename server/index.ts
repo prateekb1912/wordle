@@ -69,14 +69,23 @@ io.on("connection", (socket) => {
     };
     room.scores[socketId] = (room.scores[socketId] || 0) + points;
 
+    const allDone = room.players.every(
+      (player) => room.roundState.playerProgress[player.id],
+    );
     const leaderboard = room.players.map((player) => ({
       name: player.name,
       score: room.scores[player.id] || 0,
     }));
-
-    console.log(leaderboard);
-
     io.to(roomCode).emit("leaderboardUpdated", leaderboard);
+
+    if (allDone) {
+      console.log("ALL PLAYERS DONE");
+      room.status = "round_end";
+      io.to(roomCode).emit("roundEnded", {
+        word: room.roundState.word,
+        leaderboard,
+      });
+    }
   });
 
   socket.on("disconnect", () => {
