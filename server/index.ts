@@ -105,6 +105,17 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("resetRoom", ({ roomCode }) => {
+    const room = rooms[roomCode];
+
+    room.status = "lobby";
+    room.currentRound = 0;
+    room.scores = {};
+    room.players.forEach((p) => (p.score = 0));
+
+    io.to(roomCode).emit("roomUpdated", room);
+  });
+
   socket.on("disconnect", () => {
     console.log("user disconnected:", socket.id);
   });
