@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { WORDS } from "../../words";
 import socket from "../../socket";
+import Leaderboard from "../Leaderboard";
 
 const MAX_GUESSES = 6;
 const PRIORITY = { correct: 3, present: 2, absent: 1 };
@@ -134,7 +135,7 @@ function Toast({ message }) {
   );
 }
 
-function GameScreen({ word, roomCode, isMultiplayer }) {
+function GameScreen({ word, roomCode, isMultiplayer, leaderboard }) {
   const params = new URLSearchParams(window.location.search);
   const encoded = params.get("challenge");
   const [currentGuess, setCurrentGuess] = useState("");
@@ -144,7 +145,6 @@ function GameScreen({ word, roomCode, isMultiplayer }) {
     return word;
   });
   const [toast, setToast] = useState("");
-  const [leaderboardState, setLeaderboardState] = useState([]);
   const keyboardStatuses = getKeyboardStatuses(guesses, answer);
 
   function showToast(message) {
@@ -199,14 +199,6 @@ function GameScreen({ word, roomCode, isMultiplayer }) {
   }
 
   useEffect(() => {
-    socket.on("leaderboardUpdated", (leaderboard) => {
-      setLeaderboardState(leaderboard);
-    });
-
-    return () => socket.off("leaderboardUpdated");
-  }, []);
-
-  useEffect(() => {
     function handleKey(e) {
       if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
       const key = e.code.startsWith("Key") ? e.code.at(-1) : e.key;
@@ -222,8 +214,8 @@ function GameScreen({ word, roomCode, isMultiplayer }) {
   }
 
   return (
-    <div className="flex flex-col min-h-screen items-center">
-      <div className="flex flex-col items-center w-full px-2 py-6 gap-8">
+    <div className="flex flex-col lg:flex-row min-h-screen justify-center items-center lg:items-start px-4 py-8 gap-6">
+      <div className="flex flex-col items-center gap-8">
         <div className="flex flex-col gap-[6px]">
           {Array.from({ length: MAX_GUESSES }, (_, i) => (
             <Row
@@ -252,25 +244,18 @@ function GameScreen({ word, roomCode, isMultiplayer }) {
             </button>
           )}
 
-        <div className="flex flex-col w-full px-2 gap-1 mt-6 mb-6">
+        <div className="flex flex-col items-center gap-1">
           <Keyboard
             statuses={keyboardStatuses}
             handleKeyClick={handleKeyClick}
           />
         </div>
-
-        {isMultiplayer && (
-          <div>
-            <ul>
-              {leaderboardState.map(({ name, score }) => (
-                <li key={name}>
-                  {name} {score}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
+      {isMultiplayer && (
+        <div className="w-full max-w-sm lg:w-44 lg:pt-2 lg:order-last">
+          <Leaderboard leaderboard={leaderboard} />
+        </div>
+      )}
     </div>
   );
 }

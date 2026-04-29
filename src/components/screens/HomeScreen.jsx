@@ -46,15 +46,17 @@ function HomeScreen() {
           onChange={(e) => setRoomCode(e.target.value)}
           className="border border-border rounded px-4 py-2 bg-surface flex-1 outline-none"
         />
-        <button
-          disabled={!name.trim() || !roomCode.trim()}
-          onClick={() =>
-            socket.emit("joinRoom", { roomCode, playerName: name })
-          }
-          className="bg-accent text-white px-5 rounded font-bold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          Join
-        </button>
+        {name.trim() && (
+          <button
+            disabled={!name.trim() || !roomCode.trim()}
+            onClick={() =>
+              socket.emit("joinRoom", { roomCode, playerName: name })
+            }
+            className="bg-accent text-white px-5 rounded font-bold cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Join
+          </button>
+        )}
       </div>
       {error && <p className="text-red-500 text-sm text-center">{error}</p>}
     </div>

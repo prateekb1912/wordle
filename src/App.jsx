@@ -14,6 +14,7 @@ function App() {
   const [roomState, setRoomState] = useState(null);
   const [roundWord, setRoundWord] = useState(null);
   const [roundEnd, setRoundEnd] = useState(null);
+  const [leaderboardState, setLeaderboardState] = useState([]);
 
   function renderScreen() {
     if (screen == "game")
@@ -22,6 +23,7 @@ function App() {
           word={roundWord}
           roomCode={roomState.code}
           isMultiplayer={true}
+          leaderboard={leaderboardState}
         />
       );
     else if (screen == "home") return <HomeScreen />;
@@ -57,12 +59,16 @@ function App() {
       setRoundEnd({ roundWord, leaderboard });
       setScreen("gameEnd");
     });
+    socket.on("leaderboardUpdated", (leaderboard) => {
+      setLeaderboardState(leaderboard);
+    });
 
     return () => {
       socket.off("gameOver");
       socket.off("roundEnded");
       socket.off("roundStarted");
       socket.off("roomUpdated");
+      socket.off("leaderboardUpdated");
       socket.off("connect");
     };
   }, []);

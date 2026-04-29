@@ -66,10 +66,18 @@ io.on("connection", (socket) => {
       WORDS[Math.floor(Math.random() * WORDS.length)] as string
     ).toUpperCase();
 
+    const leaderboard = room.players.map((player) => ({
+      name: player.name,
+      score: room.scores[player.id] || 0,
+    }));
+    leaderboard.sort((a, b) => b.score - a.score);
+
     room.status = "playing";
     room.currentRound++;
     room.roundState = { word, startTime: Date.now(), playerProgress: {} };
     io.to(roomCode).emit("roundStarted", { word, round: room.currentRound });
+
+    io.to(roomCode).emit("leaderboardUpdated", leaderboard);
   });
 
   socket.on("submitResult", ({ roomCode, guessCount, won }) => {
