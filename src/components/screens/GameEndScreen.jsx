@@ -5,7 +5,7 @@ export default function GameEndScreen({ roundEnd, room }) {
   const winningPlayer = leaderboard[0].name;
 
   return (
-    <>
+    <div className="max-w-lg mx-auto px-4 py-8">
       <div>
         <ul>
           {leaderboard.map(({ name, score }) => (
@@ -23,6 +23,6 @@ export default function GameEndScreen({ roundEnd, room }) {
       >
         Play Again
       </button>
-    </>
+    </div>
   );
 }

@@ -7,6 +7,7 @@ import GameScreen from "./components/screens/GameScreen.jsx";
 import LobbyScreen from "./components/screens/LobbyScreen.jsx";
 import RoundEndScreen from "./components/screens/RoundEndScreen.jsx";
 import GameEndScreen from "./components/screens/GameEndScreen.jsx";
+import Header from "./components/Header.jsx";
 
 function App() {
   const [screen, setScreen] = useState("home");
@@ -44,7 +45,7 @@ function App() {
       setRoomState(room);
       setScreen("lobby");
     });
-    socket.on("roundStarted", ({ word, round }) => {
+    socket.on("roundStarted", ({ word }) => {
       setScreen("game");
       setRoundWord(word);
     });
@@ -66,7 +67,12 @@ function App() {
     };
   }, []);
 
-  return <div className="min-h-screen bg-bg text-text">{renderScreen()}</div>;
+  return (
+    <div className="min-h-screen bg-bg text-text">
+      <Header />
+      {renderScreen()}
+    </div>
+  );
 }
 
 export default App;

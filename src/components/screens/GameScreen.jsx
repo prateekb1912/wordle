@@ -152,13 +152,6 @@ function GameScreen({ word, roomCode, isMultiplayer }) {
     setTimeout(() => setToast(""), 2000);
   }
 
-  function handleShare() {
-    const encoded = btoa(answer);
-    const url = `${window.location.origin}?challenge=${encoded}`;
-    navigator.clipboard.writeText(url);
-    showToast("Challenge link copied!");
-  }
-
   function handleReset() {
     setCurrentGuess("");
     setGuesses([]);
@@ -215,7 +208,7 @@ function GameScreen({ word, roomCode, isMultiplayer }) {
 
   useEffect(() => {
     function handleKey(e) {
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
       const key = e.code.startsWith("Key") ? e.code.at(-1) : e.key;
       handleInput(key);
     }
@@ -230,19 +223,6 @@ function GameScreen({ word, roomCode, isMultiplayer }) {
 
   return (
     <div className="flex flex-col min-h-screen items-center">
-      <header className="w-full border-b border-gray-300 flex items-center justify-center py-3 mb-6 relative">
-        <h1 className="text-4xl font-bold font-rubik text-gray-800 tracking-wider">
-          WORDLE
-        </h1>
-        {!isMultiplayer && (
-          <button
-            onClick={handleShare}
-            className="absolute right-4 px-2 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 text-xs cursor-pointer"
-          >
-            Challenge
-          </button>
-        )}
-      </header>
       <div className="flex flex-col items-center w-full px-2 py-6 gap-8">
         <div className="flex flex-col gap-[6px]">
           {Array.from({ length: MAX_GUESSES }, (_, i) => (
