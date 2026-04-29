@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { WORDS } from "../words";
-import socket from "../socket";
+import { WORDS } from "../../words";
+import socket from "../../socket";
 
 const MAX_GUESSES = 6;
 const PRIORITY = { correct: 3, present: 2, absent: 1 };

@@ -2,17 +2,41 @@ import "./App.css";
 import { useState } from "react";
 import { useEffect } from "react";
 import socket from "./socket";
-import HomeScreen from "./components/HomeScreen.jsx";
-import GameScreen from "./components/GameScreen.jsx";
-import LobbyScreen from "./components/LobbyScreen.jsx";
-import RoundEndScreen from "./components/RoundEndScreen.jsx";
-import GameEndScreen from "./components/GameEndScreen.jsx";
+import HomeScreen from "./components/screens/HomeScreen.jsx";
+import GameScreen from "./components/screens/GameScreen.jsx";
+import LobbyScreen from "./components/screens/LobbyScreen.jsx";
+import RoundEndScreen from "./components/screens/RoundEndScreen.jsx";
+import GameEndScreen from "./components/screens/GameEndScreen.jsx";
 
 function App() {
   const [screen, setScreen] = useState("home");
   const [roomState, setRoomState] = useState(null);
   const [roundWord, setRoundWord] = useState(null);
   const [roundEnd, setRoundEnd] = useState(null);
+
+  function renderScreen() {
+    if (screen == "game")
+      return (
+        <GameScreen
+          word={roundWord}
+          roomCode={roomState.code}
+          isMultiplayer={true}
+        />
+      );
+    else if (screen == "home") return <HomeScreen />;
+    else if (screen == "lobby")
+      return <LobbyScreen room={roomState} socketId={socket.id} />;
+    else if (screen == "roundEnd")
+      return (
+        <RoundEndScreen
+          roundEnd={roundEnd}
+          room={roomState}
+          socketId={socket.id}
+        />
+      );
+    else if (screen == "gameEnd")
+      return <GameEndScreen roundEnd={roundEnd} room={roomState} />;
+  }
 
   useEffect(() => {
     socket.on("connect", () => console.log("connected:", socket.id));
@@ -42,27 +66,7 @@ function App() {
     };
   }, []);
 
-  if (screen == "game")
-    return (
-      <GameScreen
-        word={roundWord}
-        roomCode={roomState.code}
-        isMultiplayer={true}
-      />
-    );
-  else if (screen == "home") return <HomeScreen />;
-  else if (screen == "lobby")
-    return <LobbyScreen room={roomState} socketId={socket.id} />;
-  else if (screen == "roundEnd")
-    return (
-      <RoundEndScreen
-        roundEnd={roundEnd}
-        room={roomState}
-        socketId={socket.id}
-      />
-    );
-  else if (screen == "gameEnd")
-    return <GameEndScreen roundEnd={roundEnd} room={roomState} />;
+  return <div className="min-h-screen bg-bg text-text">{renderScreen()}</div>;
 }
 
 export default App;

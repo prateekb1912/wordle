@@ -1,4 +1,4 @@
-import socket from "../socket";
+import socket from "../../socket";
 
 export default function RoundEndScreen({ roundEnd, room, socketId }) {
   const word = roundEnd.word;

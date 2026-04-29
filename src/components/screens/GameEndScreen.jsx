@@ -1,4 +1,4 @@
-import socket from "../socket";
+import socket from "../../socket";
 
 export default function GameEndScreen({ roundEnd, room }) {
   const leaderboard = roundEnd.leaderboard;

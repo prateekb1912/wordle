@@ -3,4 +3,10 @@
 
 @theme {
   --font-rubik: "Rubik", sans-serif;
+  --color-bg: #f9f8f4;
+  --color-surface: #ffffff;
+  --color-border: #e2e0d9;
+  --color-text: #1a1a1a;
+  --color-muted: #9a9890;
+  --color-accent: #1a1a1a;
 }
