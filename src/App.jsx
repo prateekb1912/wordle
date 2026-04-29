@@ -6,6 +6,7 @@ import HomeScreen from "./components/HomeScreen.jsx";
 import GameScreen from "./components/GameScreen.jsx";
 import LobbyScreen from "./components/LobbyScreen.jsx";
 import RoundEndScreen from "./components/RoundEndScreen.jsx";
+import GameEndScreen from "./components/GameEndScreen.jsx";
 
 function App() {
   const [screen, setScreen] = useState("home");
@@ -27,8 +28,13 @@ function App() {
       setRoundEnd({ word, leaderboard });
       setScreen("roundEnd");
     });
+    socket.on("gameOver", ({ leaderboard }) => {
+      setRoundEnd({ roundWord, leaderboard });
+      setScreen("gameEnd");
+    });
 
     return () => {
+      socket.off("gameOver");
       socket.off("roundEnded");
       socket.off("roundStarted");
       socket.off("roomUpdated");
@@ -49,6 +55,8 @@ function App() {
         socketId={socket.id}
       />
     );
+  else if (screen == "gameEnd")
+    return <GameEndScreen roundEnd={roundEnd} room={roomState} />;
 }
 
 export default App;

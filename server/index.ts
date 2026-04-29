@@ -4,6 +4,7 @@ import { Server } from "socket.io";
 import { WORDS } from "../src/words";
 
 const MAX_GUESSES = 6;
+const MAX_ROUNDS = 1;
 
 const app = express();
 const server = http.createServer(app);
@@ -46,6 +47,21 @@ io.on("connection", (socket) => {
   socket.on("startGame", ({ roomCode }) => {
     const room = rooms[roomCode];
 
+    console.log(`Round: ${room.currentRound}`);
+
+    if (room.currentRound >= MAX_ROUNDS) {
+      room.status = "gameEnd";
+      const leaderboard = room.players.map((p) => ({
+        name: p.name,
+        score: room.scores[p.id] || 0,
+      }));
+      leaderboard.sort((a, b) => b.score - a.score);
+      io.to(roomCode).emit("gameOver", {
+        leaderboard,
+      });
+      return;
+    }
+
     const word = (
       WORDS[Math.floor(Math.random() * WORDS.length)] as string
     ).toUpperCase();
@@ -76,6 +92,7 @@ io.on("connection", (socket) => {
       name: player.name,
       score: room.scores[player.id] || 0,
     }));
+    leaderboard.sort((a, b) => b.score - a.score);
     io.to(roomCode).emit("leaderboardUpdated", leaderboard);
 
     if (allDone) {
